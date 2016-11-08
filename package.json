@@ -14,5 +14,16 @@
     "files"
   ],
   "author": "Alex Canessa",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "css": "^2.2.1",
+    "deep-assign": "^2.0.0",
+    "minimist": "^1.2.0",
+    "eslint": "^3.6.0",
+    "eslint-config-standard": "^6.0.1",
+    "eslint-plugin-promise": "^2.0.1",
+    "eslint-plugin-standard": "^2.0.0",
+    "grunt": "^1.0.1",
+    "grunt-eslint": "^19.0.0"
+  }
 }
