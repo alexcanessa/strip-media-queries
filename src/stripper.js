@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require('fs');
 const css = require('css');
 const assign = require('deep-assign');
