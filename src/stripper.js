@@ -12,7 +12,7 @@ const defaults = {
     width: '1200',
     outputFile: 'media-queries.css',
     overrideOriginal: false,
-    strippedSuffix: '.stripped.css'
+    strippedSuffix: 'stripped'
 };
 
 /**
@@ -82,7 +82,13 @@ function stripFile(instance, filter) {
  * @return {Promise}
  */
 function writeStrippedFile(instance) {
-    let path = instance.options.filename.replace('.css', instance.options.strippedSuffix);
+    let path = instance.options.filename;
+
+    if (!instance.options.overrideOriginal) {
+        let suffix = instance.options.strippedSuffix.replace(/\.css$|\./g, '');
+
+        path = path.replace('.css', `.${suffix}.css`);
+    }
 
     console.log(chalk.blue(`\n=== Writing ${path} ===`));
 
