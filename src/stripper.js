@@ -17,20 +17,6 @@ const defaults = {
 };
 
 /**
- * Get the path of a given filename
- *
- * @param  {string} filename
- *
- * @return {string}
- */
-function getFilePath(filename) {
-    return filename
-        .split('/')
-        .slice(0, -1)
-        .join('/');
-}
-
-/**
  * Filter a css rule based on media width
  *
  * @param  {string} width
@@ -99,7 +85,6 @@ function writeStrippedFile(instance) {
     return instance.files
         .map(filename => {
             let path = filename;
-
 
             if (!instance.options.overrideOriginal) {
                 let suffix = instance.options.strippedSuffix.replace(/\.css$|\./g, '');
