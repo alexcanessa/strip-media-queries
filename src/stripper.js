@@ -138,13 +138,28 @@ function writeMediaQueriesFile(instance) {
 }
 
 /**
+ * Get the file list based on the given one
+ *
+ * @param  {Array|string} files
+ *
+ * @return {Array}
+ */
+function getFileList(instance) {
+    if (typeof instance.options.files !== 'array') {
+        return glob.sync(instance.options.files).filter(filterFileName.bind(null, instance));
+    }
+
+    return instance.options.files;
+}
+
+/**
  * Stripper Class
  *
  * @param {Object} options
  */
 function Stripper(options = {}) {
     this.options = assign({}, defaults, options);
-    this.files = glob.sync(this.options.filename).filter(filterFileName.bind(null, this));
+    this.files =  getFileList(this);
 }
 
 /**
