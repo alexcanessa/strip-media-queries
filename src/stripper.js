@@ -80,7 +80,7 @@ function stripFile(instance, filter, filename) {
     let cssFile = css.parse(fs.readFileSync(filename, 'utf-8'));
     let strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.width));
 
-    console.log(`${strippedContent.length} rule found for the ${filter} function`);
+    console.log(`${strippedContent.length} rules found for the ${filter} function`);
 
     cssFile.stylesheet.rules = strippedContent;
 
@@ -107,7 +107,7 @@ function writeStrippedFile(instance) {
                 path = path.replace('.css', `.${suffix}.css`);
             }
 
-            console.log(chalk.blue(`\n=== Writing ${path} ===`));
+            console.log(chalk.blue(`\n=== Writing ${path} from ${filename} ===`));
 
             let notMediaQueriesFile = stripFile(instance, 'strip', filename);
 
@@ -136,7 +136,7 @@ function writeMediaQueriesFile(instance) {
     let path = instance.options.outputFile;
     let mediaQueriesFile = instance.files
         .map(filename => {
-            console.log(chalk.blue(`\n=== Writing ${filename} ===`));
+            console.log(chalk.blue(`\n=== Writing ${path} from ${filename} ===`));
 
             return stripFile(instance, 'original', filename);
         }).join('\n');
