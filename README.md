@@ -1,5 +1,7 @@
 # Strip Media Queries
 
+[![npm version](https://badge.fury.io/js/strip-media-queries.svg)](https://badge.fury.io/js/strip-media-queries)
+
 > Node module to strip media queries from a CSS file and create a file with them.
 
 ## Usage
@@ -13,7 +15,7 @@ npm install strip-media-queries -g
 Run it from your project folder. e.g.
 
 ```shell
-strip-media-queries --filename=demo/style.css --width=400
+strip-media-queries --files=demo/**.css --width=400
 ```
 
 ## Options
