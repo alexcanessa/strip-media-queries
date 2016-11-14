@@ -22,7 +22,9 @@ strip-media-queries --files=demo/**.css --width=400
 
 The options for the module are the following:
 
-- `files`: The name of the file that contains the media queries.
+- `src`: The name of the file that contains the media queries.
+- `dest`: The name of the file that will contains all the media queries.
+- `ignore`: The files to be ignored.
 - `width`: The width of the media queries to strip out. `Default: '1200'`
 - `override`: Configure if override the original file or create a new one. `Default: false`
 - `stripperSuffix`: The suffix to add to the new stripped file. `Default: '.stripped.css'`

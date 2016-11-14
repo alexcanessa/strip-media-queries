@@ -11,7 +11,6 @@ const filters = {
 };
 const defaults = {
     width: '1200',
-    outputFile: 'media-queries.css',
     overrideOriginal: false,
     strippedSuffix: 'stripped'
 };
@@ -118,7 +117,7 @@ function writeStrippedFile(instance) {
  * @return {Promise}
  */
 function writeMediaQueriesFile(instance) {
-    let path = instance.options.outputFile;
+    let path = instance.options.dest;
     let mediaQueriesFile = instance.files
         .map(filename => {
             console.log(chalk.blue(`\n=== Writing ${path} from ${filename} ===`));
@@ -145,13 +144,16 @@ function writeMediaQueriesFile(instance) {
  * @return {Array}
  */
 function getFileList(instance) {
-    let files = instance.options.files;
-
-    if (typeof instance.options.files !== 'object') {
-        files = glob.sync(instance.options.files);
+    if (typeof instance.options.src === 'string') {
+        return glob.sync(instance.options.src);
     }
 
-    return files.filter(filterFileName.bind(null, instance));
+    return instance.options.files.src
+            .filter(filterFileName.bind(null, instance))
+            .filter(filename => {
+                return instance.options.files
+                            .ignore.indexOf(filename) === -1;
+            });
 }
 
 /**
