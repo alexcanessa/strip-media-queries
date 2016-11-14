@@ -8,7 +8,7 @@
   },
   "preferGlobal": "true",
   "bin": {
-    "mq-stripper": "bin/stripper.js"
+    "strip-media-queries": "bin/stripper.js"
   },
   "keywords": [
     "strip",
@@ -23,6 +23,7 @@
     "chalk": "^1.1.3",
     "css": "^2.2.1",
     "deep-assign": "^2.0.0",
+    "glob": "^7.1.1",
     "minimist": "^1.2.0"
   },
   "devDependencies": {

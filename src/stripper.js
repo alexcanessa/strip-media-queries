@@ -4,6 +4,7 @@ const fs = require('fs');
 const css = require('css');
 const assign = require('deep-assign');
 const chalk = require('chalk');
+const glob = require('glob');
 const filters = {
     strip: filterMediaQueries,
     original: filterNonMediaQueries
@@ -54,6 +55,19 @@ function filterNonMediaQueries(width, rule) {
 }
 
 /**
+ * Filter the filename based on options
+ *
+ * @param  {string} filename
+ *
+ * @return {Boolean}
+ */
+function filterFileName(instance, filename) {
+    let regex = new RegExp(instance.options.strippedSuffix, 'g');
+
+    return filename !== instance.options.outputFile && !filename.match(regex);
+}
+
+/**
  * Strip a file based on a width and using a certain filter function
  *
  * @param  {string} filename
@@ -62,8 +76,8 @@ function filterNonMediaQueries(width, rule) {
  *
  * @return {string}
  */
-function stripFile(instance, filter) {
-    let cssFile = css.parse(fs.readFileSync(instance.options.filename, 'utf-8'));
+function stripFile(instance, filter, filename) {
+    let cssFile = css.parse(fs.readFileSync(filename, 'utf-8'));
     let strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.width));
 
     console.log(`${strippedContent.length} rule found for the ${filter} function`);
@@ -79,30 +93,35 @@ function stripFile(instance, filter) {
  * @param  {string} filename
  * @param  {string} width
  *
- * @return {Promise}
+ * @return {Promise[]}
  */
 function writeStrippedFile(instance) {
-    let path = instance.options.filename;
+    return instance.files
+        .map(filename => {
+            let path = filename;
 
-    if (!instance.options.overrideOriginal) {
-        let suffix = instance.options.strippedSuffix.replace(/\.css$|\./g, '');
 
-        path = path.replace('.css', `.${suffix}.css`);
-    }
+            if (!instance.options.overrideOriginal) {
+                let suffix = instance.options.strippedSuffix.replace(/\.css$|\./g, '');
 
-    console.log(chalk.blue(`\n=== Writing ${path} ===`));
-
-    let notMediaQueriesFile = stripFile(instance, 'strip');
-
-    return new Promise((resolve, reject) => {
-        fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
-            if (error) {
-                reject();
+                path = path.replace('.css', `.${suffix}.css`);
             }
 
-            resolve();
+            console.log(chalk.blue(`\n=== Writing ${path} ===`));
+
+            let notMediaQueriesFile = stripFile(instance, 'strip', filename);
+
+            return new Promise((resolve, reject) => {
+                fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
+                    if (error) {
+                        console.log(path + ', here');
+                        reject();
+                    }
+
+                    resolve();
+                });
+            });
         });
-    });
 }
 
 /**
@@ -114,11 +133,13 @@ function writeStrippedFile(instance) {
  * @return {Promise}
  */
 function writeMediaQueriesFile(instance) {
-    let path = getFilePath(instance.options.filename) + '/' + instance.options.outputFile;
+    let path = instance.options.outputFile;
+    let mediaQueriesFile = instance.files
+        .map(filename => {
+            console.log(chalk.blue(`\n=== Writing ${filename} ===`));
 
-    console.log(chalk.blue(`\n=== Writing ${path} ===`));
-
-    let mediaQueriesFile = stripFile(instance, 'original');
+            return stripFile(instance, 'original', filename);
+        }).join('\n');
 
     return new Promise((resolve, reject) => {
         fs.writeFile(path, mediaQueriesFile, 'utf-8', error => {
@@ -138,6 +159,7 @@ function writeMediaQueriesFile(instance) {
  */
 function Stripper(options = {}) {
     this.options = assign({}, defaults, options);
+    this.files = glob.sync(this.options.filename).filter(filterFileName.bind(null, this));
 }
 
 /**
@@ -149,10 +171,11 @@ function Stripper(options = {}) {
  * @return {Promise[]}
  */
 Stripper.prototype.launch = function() {
-    return Promise.all([
-        writeMediaQueriesFile(this),
-        writeStrippedFile(this)
-    ]);
+    return writeMediaQueriesFile(this)
+        .then(() => Promise.all(writeStrippedFile(this)))
+        .catch(error => {
+            console.log(chalk.red(error));
+        });
 };
 
 module.exports = Stripper;
