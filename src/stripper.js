@@ -24,7 +24,7 @@ const defaults = {
  * @return {boolean}
  */
 function filterMediaQueries(width, rule) {
-    return rule.type === 'rule' || rule.type === 'media' && !rule.media.match(`${width}px`);
+    return rule.type !== 'media' || rule.type === 'media' && !rule.media.match(`${width}px`);
 }
 
 /**
@@ -49,7 +49,7 @@ function filterNonMediaQueries(width, rule) {
 function filterFileName(instance, filename) {
     let regex = new RegExp(instance.options.strippedSuffix, 'g');
 
-    return filename !== instance.options.outputFile && !filename.match(regex);
+    return filename !== instance.options.dest && !filename.match(regex);
 }
 
 /**
@@ -144,15 +144,13 @@ function writeMediaQueriesFile(instance) {
  * @return {Array}
  */
 function getFileList(instance) {
-    if (typeof instance.options.src === 'string') {
-        return glob.sync(instance.options.src);
-    }
+    let files = instance.options.src ? glob.sync(instance.options.src) : instance.options.files.src;
+    let ignore = instance.options.ignore ? glob.sync(instance.options.ignore) : instance.options.files.ignore;
 
-    return instance.options.files.src
+    return files
             .filter(filterFileName.bind(null, instance))
             .filter(filename => {
-                return instance.options.files
-                            .ignore.indexOf(filename) === -1;
+                return ignore.indexOf(filename) === -1;
             });
 }
 
