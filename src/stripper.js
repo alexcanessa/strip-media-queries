@@ -98,7 +98,7 @@ function writeStrippedFile(instance) {
             return new Promise((resolve, reject) => {
                 fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
                     if (error) {
-                        console.log(path + ', here');
+                        console.error(path + ', here');
                         reject(error);
                         return;
                     }
