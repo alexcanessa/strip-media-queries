@@ -78,10 +78,11 @@ function stripFile(instance, filter, filename) {
  * @param  {string} filename
  * @param  {string} width
  *
- * @return {Promise[]}
+ * @return {Promise}
  */
 function writeStrippedFile(instance) {
-    return instance.files
+    return Promise.all(
+        instance.files
         .map(filename => {
             let path = filename;
 
@@ -106,7 +107,8 @@ function writeStrippedFile(instance) {
                     resolve();
                 });
             });
-        });
+        })
+    );
 }
 
 /**
@@ -176,10 +178,10 @@ function Stripper(options = {}) {
  */
 Stripper.prototype.launch = function() {
     return writeMediaQueriesFile(this)
-        .then(() => Promise.all(writeStrippedFile(this)))
         .catch(error => {
             console.log(chalk.red(error));
         });
+        .then(() => writeStrippedFile(this));
 };
 
 module.exports = Stripper;
