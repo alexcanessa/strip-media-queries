@@ -24,7 +24,8 @@
     "css": "^2.2.1",
     "deep-assign": "^2.0.0",
     "glob": "^7.1.1",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "mz": "^2.6.0"
   },
   "devDependencies": {
     "eslint": "^3.6.0",
