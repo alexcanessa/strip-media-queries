@@ -9,4 +9,8 @@ const stripper = new Stripper(minimist);
 stripper.launch()
     .then(() => {
         console.log(`\n${chalk.green('All done!')}`);
+    })
+    .catch(error => {
+        console.error(chalk.red(error));
+        process.exit(64);
     });

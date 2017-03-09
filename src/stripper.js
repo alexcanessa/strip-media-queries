@@ -178,9 +178,6 @@ function Stripper(options = {}) {
  */
 Stripper.prototype.launch = function() {
     return writeMediaQueriesFile(this)
-        .catch(error => {
-            console.log(chalk.red(error));
-        });
         .then(() => writeStrippedFile(this));
 };
 
