@@ -99,7 +99,8 @@ function writeStrippedFile(instance) {
                 fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
                     if (error) {
                         console.log(path + ', here');
-                        reject();
+                        reject(error);
+                        return;
                     }
 
                     resolve();
@@ -128,7 +129,8 @@ function writeMediaQueriesFile(instance) {
     return new Promise((resolve, reject) => {
         fs.writeFile(path, mediaQueriesFile, 'utf-8', error => {
             if (error) {
-                reject();
+                reject(error);
+                return;
             }
 
             resolve();
