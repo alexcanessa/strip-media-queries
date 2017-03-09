@@ -53,23 +53,54 @@ function filterFileName(instance, filename) {
 }
 
 /**
+ * Load and parse, or retrieve cached parsed CSS, for a given filename
+ *
+ * @param  {string} instance
+ * @param  {string} filename
+ *
+ * @return {Promise} Resolves to parsed CSS
+ */
+function getParsedCSS(instance, filename) {
+    if (instance._cssCache[filename]) {
+        return Promise.resolve(instance._cssCache[filename]);
+    }
+    return new Promise((resolve, reject) => {
+        fs.readFile(filename, 'utf-8', (error, data) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            resolve(data);
+        });
+    }).then(source => {
+        instance._cssCache[filename] = css.parse(source);
+        return instance._cssCache[filename];
+    });
+}
+
+/**
  * Strip a file based on a width and using a certain filter function
  *
  * @param  {string} filename
  * @param  {string} width
  * @param  {string} filter
  *
- * @return {string}
+ * @return {Promise<string>}
  */
 function stripFile(instance, filter, filename) {
-    let cssFile = css.parse(fs.readFileSync(filename, 'utf-8'));
-    let strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.width));
+    return getParsedCSS(instance, filename).then(cssFile => {
+        const strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.width));
 
-    console.log(`${strippedContent.length} rules found for the ${filter} function`);
+        console.log(`${chalk.blue(filename + ':')} ${strippedContent.length} rules found for the ${filter} function\n`);
 
-    cssFile.stylesheet.rules = strippedContent;
+        cssFile = Object.assign({}, cssFile, {
+            stylesheet: Object.assign({}, cssFile.stylesheet, {
+                rules: strippedContent
+            })
+        });
 
-    return css.stringify(cssFile);
+        return css.stringify(cssFile);
+    });
 }
 
 /**
@@ -92,21 +123,20 @@ function writeStrippedFile(instance) {
                 path = path.replace('.css', `.${suffix}.css`);
             }
 
-            console.log(chalk.blue(`\n=== Writing ${path} from ${filename} ===`));
+            console.log(chalk.blue(`Writing ${path} from ${filename}\n`));
 
-            let notMediaQueriesFile = stripFile(instance, 'strip', filename);
+            return stripFile(instance, 'strip', filename)
+                .then(notMediaQueriesFile => new Promise((resolve, reject) => {
+                    fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
+                        if (error) {
+                            console.error(path + ', here');
+                            reject(error);
+                            return;
+                        }
 
-            return new Promise((resolve, reject) => {
-                fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
-                    if (error) {
-                        console.error(path + ', here');
-                        reject(error);
-                        return;
-                    }
-
-                    resolve();
-                });
-            });
+                        resolve();
+                    })
+                }))
         })
     );
 }
@@ -121,15 +151,15 @@ function writeStrippedFile(instance) {
  */
 function writeMediaQueriesFile(instance) {
     let path = instance.options.dest;
-    let mediaQueriesFile = instance.files
+    return Promise.all(
+        instance.files
         .map(filename => {
-            console.log(chalk.blue(`\n=== Writing ${path} from ${filename} ===`));
+            console.log(chalk.blue(`Writing ${path} from ${filename}\n`));
 
             return stripFile(instance, 'original', filename);
-        }).join('\n');
-
-    return new Promise((resolve, reject) => {
-        fs.writeFile(path, mediaQueriesFile, 'utf-8', error => {
+        })
+    ).then(strippedFiles => new Promise((resolve, reject) => {
+        fs.writeFile(path, strippedFiles.join('\n'), 'utf-8', error => {
             if (error) {
                 reject(error);
                 return;
@@ -137,7 +167,7 @@ function writeMediaQueriesFile(instance) {
 
             resolve();
         });
-    });
+    }));
 }
 
 /**
@@ -177,6 +207,7 @@ function Stripper(options = {}) {
  * @return {Promise[]}
  */
 Stripper.prototype.launch = function() {
+    this._cssCache = {};
     return writeMediaQueriesFile(this)
         .then(() => writeStrippedFile(this));
 };
