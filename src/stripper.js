@@ -1,6 +1,6 @@
 'use strict';
 
-const fs = require('fs');
+const fs = require('mz/fs');
 const css = require('css');
 const assign = require('deep-assign');
 const chalk = require('chalk');
@@ -64,18 +64,11 @@ function getParsedCSS(instance, filename) {
     if (instance._cssCache[filename]) {
         return Promise.resolve(instance._cssCache[filename]);
     }
-    return new Promise((resolve, reject) => {
-        fs.readFile(filename, 'utf-8', (error, data) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            resolve(data);
+    return fs.readFile(filename, 'utf-8')
+        .then(source => {
+            instance._cssCache[filename] = css.parse(source);
+            return instance._cssCache[filename];
         });
-    }).then(source => {
-        instance._cssCache[filename] = css.parse(source);
-        return instance._cssCache[filename];
-    });
 }
 
 /**
@@ -126,17 +119,13 @@ function writeStrippedFile(instance) {
             console.log(chalk.blue(`Writing ${path} from ${filename}\n`));
 
             return stripFile(instance, 'strip', filename)
-                .then(notMediaQueriesFile => new Promise((resolve, reject) => {
-                    fs.writeFile(path, notMediaQueriesFile, 'utf-8', error => {
-                        if (error) {
-                            console.error(path + ', here');
-                            reject(error);
-                            return;
-                        }
-
-                        resolve();
-                    })
-                }))
+                .then(notMediaQueriesFile =>
+                    fs.writeFile(path, notMediaQueriesFile)
+                )
+                .catch(error => {
+                    console.error(path + ', here');
+                    throw error;
+                });
         })
     );
 }
@@ -158,16 +147,9 @@ function writeMediaQueriesFile(instance) {
 
             return stripFile(instance, 'original', filename);
         })
-    ).then(strippedFiles => new Promise((resolve, reject) => {
-        fs.writeFile(path, strippedFiles.join('\n'), 'utf-8', error => {
-            if (error) {
-                reject(error);
-                return;
-            }
-
-            resolve();
-        });
-    }));
+    ).then(strippedFiles =>
+        fs.writeFile(path, strippedFiles.join('\n'), 'utf-8')
+    );
 }
 
 /**
