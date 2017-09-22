@@ -2,7 +2,7 @@
 
 const fs = require('mz/fs');
 const css = require('css');
-const assign = require('deep-assign');
+const assign = require('object-assign-deep');
 const chalk = require('chalk');
 const glob = require('glob');
 const filters = {
@@ -14,9 +14,6 @@ const defaults = {
     overrideOriginal: false,
     strippedSuffix: 'stripped'
 };
-
-function filterByWidth(rule, width) {
-}
 
 /**
  * Filter a css rule based on media width
@@ -198,7 +195,9 @@ function convertStringToArray(arrayLike) {
     }
 
     if (typeof arrayLike === 'object') {
-        return Object.keys(arrayLike).map((itemKey) => arrayLike[itemKey]);
+        return Object.keys(arrayLike).map(function (itemKey) {
+            return arrayLike[itemKey];
+        });
     }
 
     if (typeof arrayLike === 'number') {
