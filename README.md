@@ -4,7 +4,7 @@
 
 > Node module to strip media queries from a CSS file and create a file with them.
 
-## Usage
+## Usage
 
 Install the module globally via:
 
