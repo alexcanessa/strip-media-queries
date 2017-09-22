@@ -10,33 +10,40 @@ const filters = {
     original: filterNonMediaQueries
 };
 const defaults = {
-    width: '1200',
+    widths: '1200',
     overrideOriginal: false,
     strippedSuffix: 'stripped'
 };
 
-/**
- * Filter a css rule based on media width
- *
- * @param  {string} width
- * @param  {Object} rule
- *
- * @return {boolean}
- */
-function filterMediaQueries(width, rule) {
-    return rule.type !== 'media' || rule.type === 'media' && !rule.media.match(`${width}px`);
+function filterByWidth(rule, width) {
 }
 
 /**
  * Filter a css rule based on media width
  *
- * @param  {string} width
+ * @param  {Array} widths
  * @param  {Object} rule
  *
  * @return {boolean}
  */
-function filterNonMediaQueries(width, rule) {
-    return rule.type === 'media' && rule.media.match(`${width}px`);
+function filterMediaQueries(widths, rule) {
+    return rule.type !== 'media' || rule.type === 'media' && widths.every(function (width) {
+        return !rule.media.match(`${width}px`);
+    });
+}
+
+/**
+ * Filter a css rule based on media width
+ *
+ * @param  {Array} widths
+ * @param  {Object} rule
+ *
+ * @return {boolean}
+ */
+function filterNonMediaQueries(widths, rule) {
+    return rule.type === 'media' && widths.some(function (width) {
+        return rule.media.match(`${width}px`);
+    });
 }
 
 /**
@@ -64,6 +71,7 @@ function getParsedCSS(instance, filename) {
     if (instance._cssCache[filename]) {
         return Promise.resolve(instance._cssCache[filename]);
     }
+
     return fs.readFile(filename, 'utf-8')
         .then(source => {
             instance._cssCache[filename] = css.parse(source);
@@ -82,7 +90,7 @@ function getParsedCSS(instance, filename) {
  */
 function stripFile(instance, filter, filename) {
     return getParsedCSS(instance, filename).then(cssFile => {
-        const strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.width));
+        const strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.widths));
 
         console.log(`${chalk.blue(filename + ':')} ${strippedContent.length} rules found for the ${filter} function\n`);
 
@@ -161,7 +169,11 @@ function writeMediaQueriesFile(instance) {
  */
 function getFileList(instance) {
     let files = instance.options.src ? glob.sync(instance.options.src) : instance.options.files.src;
-    let ignore = instance.options.ignore ? glob.sync(instance.options.ignore) : instance.options.files.ignore;
+    let ignore = instance.options.ignore ? glob.sync(instance.options.ignore) : instance.options.files ? instance.options.files.ignore : [];
+
+    if (!files.length) {
+        throw chalk.red('No files found.');
+    }
 
     return files
             .filter(filterFileName.bind(null, instance))
@@ -171,12 +183,53 @@ function getFileList(instance) {
 }
 
 /**
+ * Converts an array like string to an actual Array,
+ * converting also underscores to spaces
+ *
+ * @param  {string} arrayLike The string of items
+ * e.g.
+ * "100,400,1200"
+ *
+ * @return {Array}  The items wrapped in an Array
+ */
+function convertStringToArray(arrayLike) {
+    if (!arrayLike) {
+        return [];
+    }
+
+    if (typeof arrayLike === 'object') {
+        return Object.keys(arrayLike).map((itemKey) => arrayLike[itemKey]);
+    }
+
+    if (typeof arrayLike === 'number') {
+        return [''+arrayLike];
+    }
+
+    return arrayLike
+        .replace(/\s/g, '')
+        .split(',');
+}
+
+/**
  * Stripper Class
  *
  * @param {Object} options
  */
 function Stripper(options = {}) {
+    options.widths = options.widths || options.width;
+
+    delete options.width;
+
+    if (!options.widths) {
+        throw chalk.red('You have to specify a widths option');
+    }
+
+    if (!options.dest) {
+        throw chalk.red('You have to specify a dest option');
+    }
+
     this.options = assign({}, defaults, options);
+    this.options.widths = convertStringToArray(this.options.widths);
     this.files = getFileList(this);
 }
 

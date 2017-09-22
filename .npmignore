@@ -1,0 +1,6 @@
+demo/
+node_modules/
+Gruntfile.js
+.eslintrc
+.editorconfig
+.travis.yml
