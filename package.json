@@ -1,6 +1,6 @@
 {
   "name": "strip-media-queries",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Strip specific media queries from several css files and create a new file(s)",
   "main": "src/index.js",
   "scripts": {
