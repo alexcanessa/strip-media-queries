@@ -1,10 +1,11 @@
 {
   "name": "strip-media-queries",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Strip specific media queries from several css files and create a new file(s)",
   "main": "src/index.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "strip-media-queries --widths=400 --src=demo/styles.css --dest=demo/media_queries.css",
+    "test:extract": "strip-media-queries --widths=400,800 --extract=801 --src=demo/styles.css --dest=demo/media_queries.css"
   },
   "preferGlobal": "true",
   "bin": {

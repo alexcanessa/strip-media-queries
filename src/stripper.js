@@ -7,13 +7,44 @@ const chalk = require('chalk');
 const glob = require('glob');
 const filters = {
     strip: filterMediaQueries,
-    original: filterNonMediaQueries
+    original: filterNonMediaQueries,
+    extract: filterMediaQueriesToExtract,
+    stripExtract: filterMediaQueriesNotToExtract
 };
 const defaults = {
-    widths: '1200',
+    widths: [],
+    extract: [],
     overrideOriginal: false,
     strippedSuffix: 'stripped'
 };
+
+/**
+ * Filter a css rule based on media width
+ *
+ * @param  {Array} widths
+ * @param  {Object} rule
+ *
+ * @return {boolean}
+ */
+function filterMediaQueriesToExtract(extract, rule) {
+    return rule.type === 'media' && extract.some(function (extractWidth) {
+        return rule.media.match(`${extractWidth}px`);
+    });
+}
+
+/**
+ * Filter a css rule based on media width
+ *
+ * @param  {Array} widths
+ * @param  {Object} rule
+ *
+ * @return {boolean}
+ */
+function filterMediaQueriesNotToExtract(extract, rule) {
+    return rule.type !== 'media' || rule.type === 'media' && extract.every(function (extractWidth) {
+        return !rule.media.match(`${extractWidth}px`);
+    });
+}
 
 /**
  * Filter a css rule based on media width
@@ -87,13 +118,23 @@ function getParsedCSS(instance, filename) {
  */
 function stripFile(instance, filter, filename) {
     return getParsedCSS(instance, filename).then(cssFile => {
-        const strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.widths));
+        let strippedContent = cssFile.stylesheet.rules.filter(filters[filter].bind(null, instance.options.widths));
+        let extractedContent = [];
+
+        if (filter === 'strip' && instance.options.extract.length) {
+            extractedContent = strippedContent
+                .filter(filters['extract'].bind(null, instance.options.extract))
+                .map(({ rules }) => rules);
+
+            strippedContent = strippedContent
+                .filter(filters['stripExtract'].bind(null, instance.options.extract));
+        }
 
         console.log(`${chalk.blue(filename + ':')} ${strippedContent.length} rules found for the ${filter} function\n`);
 
         cssFile = Object.assign({}, cssFile, {
             stylesheet: Object.assign({}, cssFile.stylesheet, {
-                rules: strippedContent
+                rules: strippedContent.concat(...extractedContent)
             })
         });
 
@@ -215,6 +256,7 @@ function convertStringToArray(arrayLike) {
  * @param {Object} options
  */
 function Stripper(options = {}) {
+    // width as option has to be deprecated.
     options.widths = options.widths || options.width;
 
     delete options.width;
@@ -229,6 +271,7 @@ function Stripper(options = {}) {
 
     this.options = assign({}, defaults, options);
     this.options.widths = convertStringToArray(this.options.widths);
+    this.options.extract = convertStringToArray(this.options.extract);
     this.files = getFileList(this);
 }
 

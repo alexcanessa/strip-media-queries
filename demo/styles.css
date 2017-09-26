@@ -2,14 +2,20 @@ body {
     color: red;
 }
 
+@media screen and (min-width: 801px) {
+    .hide--lg {
+        display: none;
+    }
+}
+
 @media screen and (max-width: 800px) {
-    body {
-        color: green;
+    .hide--md {
+        display: none;
     }
 }
 
 @media screen and (max-width: 400px) {
-    body {
+    .hide--sml {
         color: blue;
     }
 }

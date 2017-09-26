@@ -25,6 +25,7 @@ The options for the module are the following:
 - `src`: The name of the file that contains the media queries.
 - `dest`: The name of the file that will contains all the media queries.
 - `ignore`: The files to be ignored.
-- `widths`: The width of the media queries to strip out, to add multiple widths use commas e.g. `--width=100,200`. `Default: '1200'`
+- `widths`: The width of the media queries to strip out, to add multiple widths use commas e.g. `--width=100,200`.
+- `extract`: The widths of the media queries to extract out of the media rule e.g. `--width=800`. `Default: '[]'`
 - `override`: Configure if override the original file or create a new one. `Default: false`
 - `stripperSuffix`: The suffix to add to the new stripped file. `Default: '.stripped.css'`
